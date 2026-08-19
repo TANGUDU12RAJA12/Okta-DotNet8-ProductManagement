@@ -1,0 +1,28 @@
+## .NET Standard .gitignore
+
+# Build & Binaries
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userquery
+
+# OS Generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment secret overrides (if any)
+appsettings.Development.json
+appsettings.Local.json
