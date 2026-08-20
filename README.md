@@ -5,80 +5,107 @@
 ![JavaScript](https://img.shields.io/badge/Frontend-Vanilla_JS_ES6+-F7DF1E?logo=javascript)
 ![SQL Server](https://img.shields.io/badge/Database-SQL_Server-CC292B?logo=microsoftsqlserver)
 
-A full-stack Product Management web application built with **ASP.NET Core .NET 8 Web API** and a **Vanilla JavaScript Single Page Application (SPA)**. 
+An enterprise-ready **Product Management Web Application** built with an **ASP.NET Core .NET 8 Web API** backend and a responsive **Vanilla JavaScript Single Page Application (SPA)** frontend.
 
-The application implements **Dual Hybrid Authentication**, allowing users to sign in either via **Local Manual Account Credentials** (with BCrypt password hashing) or via **Okta OIDC Hosted Page Authentication**.
+The project demonstrates a real-world **Dual Hybrid Authentication Architecture**, empowering users to authenticate using either **Local Manual Credentials** (BCrypt hashed passwords) or **Enterprise Single Sign-On (SSO)** via **Okta OIDC Hosted Page**.
+
+---
+
+## 📖 About The Project
+
+Modern web applications often require flexible authentication strategies:
+- **Local Credentials**: For guest users, freelancers, or local administrators who create accounts directly within the system.
+- **Enterprise SSO (Okta OIDC)**: For corporate employees who log in securely using their centralized Okta identity.
+
+This project solves the challenge of supporting **both login mechanisms concurrently** without duplicating backend APIs or creating fragmented security rules. 
+
+### 💡 Core Architectural Highlights
+1. **Dynamic JWT Validation Engine**: ASP.NET Core `JwtBearer` middleware uses a custom `IssuerSigningKeyResolver` to dynamically inspect incoming Bearer tokens:
+   - If issued locally (`ProducutManagementApi`), it verifies the signature using a local symmetric secret key.
+   - If issued by Okta (`https://trial-5762069.okta.com/oauth2/default`), it verifies the signature against Okta's live JWKS public keys.
+2. **Stateless API Protection**: All Product CRUD operations (`/api/products`) are protected by the `[Authorize]` attribute and accept valid JWT tokens from **either** login method.
+3. **Public Onboarding**: Authentication endpoints (`/api/auth/register` and `/api/auth/login`) are explicitly configured with `[AllowAnonymous]` so new users can seamlessly register and sign in.
 
 ---
 
 ## 🌟 Key Features
 
-- **Dual Hybrid Authentication**:
-  - **Local Manual Auth**: User registration (`POST /api/auth/register`) with BCrypt password hashing and login (`POST /api/auth/login`) issuing local symmetric JWT tokens.
-  - **Okta OIDC Auth**: Sign in via Okta hosted page (`https://trial-5762069.okta.com/...`) using PKCE Authorization Code flow.
-- **Dynamic JWT Validation**: ASP.NET Core `JwtBearer` middleware validates both local symmetric tokens and Okta JWKS public keys.
-- **`[AllowAnonymous]` & `[Authorize]` Scoping**:
-  - Public access for registration and login endpoints.
-  - Token-protected CRUD access for Product management endpoints.
-- **Product Catalog Database CRUD**: Full `Create`, `Read`, `Update`, `Delete`, and `Search by ID` operations backed by SQL Server & Entity Framework Core.
-- **Interactive SPA Frontend**: Responsive UI built with Vanilla JavaScript, modern CSS3 design system, live toast notifications, and tabs navigation.
-- **Swagger / OpenAPI Documentation**: Interactive API testing playground with JWT Bearer authorization support.
+- 🔐 **Dual Hybrid Authentication**:
+  - **Local Manual Auth**: Registration (`POST /api/auth/register`) with BCrypt password hashing and sign-in (`POST /api/auth/login`) issuing local signed JWT tokens.
+  - **Okta OIDC Auth**: One-click redirect to Okta Hosted Login page (`https://trial-5762069.okta.com/...`) using PKCE Authorization Code flow.
+- 📦 **Product Database CRUD**: Full `Create`, `Read`, `Update`, `Delete`, and `Search by ID` operations backed by SQL Server & Entity Framework Core.
+- 🎨 **Modern SPA Frontend**: Built with Vanilla JavaScript (ES6+), custom CSS3 design system, responsive card layouts, and live toast notifications.
+- 📄 **Interactive Swagger Documentation**: Full OpenAPI testing UI equipped with JWT Bearer token authentication support.
 
 ---
 
-## 🛠️ Tech Stack
+## 🔌 API Endpoints Summary
 
-### Backend
+| HTTP Method | Endpoint | Authorization | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | `[AllowAnonymous]` | Registers a new local user with BCrypt hashed password |
+| `POST` | `/api/auth/login` | `[AllowAnonymous]` | Authenticates local user & issues signed local JWT token |
+| `GET` | `/api/products` | `[Authorize]` | Retrieves all products from SQL Server database |
+| `GET` | `/api/products/{id}` | `[Authorize]` | Retrieves a specific product by Product ID |
+| `POST` | `/api/products` | `[Authorize]` | Creates a new product entry in the database |
+| `PUT` | `/api/products/{id}` | `[Authorize]` | Updates an existing product's details |
+| `DELETE` | `/api/products/{id}` | `[Authorize]` | Deletes a product from the database |
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+### Backend Architecture
 - **Framework**: ASP.NET Core 8.0 Web API
-- **Database / ORM**: Entity Framework Core 8.0 (SQL Server)
-- **Authentication**: `Microsoft.AspNetCore.Authentication.JwtBearer`
-- **Security / Password Hashing**: `BCrypt.Net-Next`
-- **Object Mapping**: `AutoMapper` 13.0
+- **Database & ORM**: Entity Framework Core 8.0 (SQL Server / LocalDB)
+- **Security & Password Hashing**: `BCrypt.Net-Next` (v4.2.0)
+- **Authentication**: `Microsoft.AspNetCore.Authentication.JwtBearer` (v8.0.11)
+- **Object Mapping**: `AutoMapper` (v13.0.1)
 - **API Documentation**: Swagger / Swashbuckle OpenAPI
 
-### Frontend
-- **Framework**: Vanilla JavaScript (ES6+ Modules)
-- **Styling**: Modern CSS3 (Flexbox/Grid, CSS Custom Properties)
-- **Identity SDK**: `@okta/okta-auth-js@7.5.0`
+### Frontend Architecture
+- **Language**: Vanilla JavaScript (ES6+ Modules)
+- **UI & Layout**: Modern CSS3 (Flexbox/Grid, Glassmorphism elements, CSS Custom Properties)
+- **Identity SDK**: `@okta/okta-auth-js` (v7.5.0)
 
 ---
 
-## 📁 Repository Project Structure
+## 📁 Repository Directory Structure
 
 ```
 ProducutManagement/
 ├── Controllers/
-│   ├── AuthController.cs         # Registration & Login endpoints ([AllowAnonymous])
-│   └── ProductsController.cs     # Protected Product CRUD endpoints ([Authorize])
+│   ├── AuthController.cs         # Public Registration & Login endpoints ([AllowAnonymous])
+│   └── ProductsController.cs     # Secured Product CRUD endpoints ([Authorize])
 ├── Data/
-│   └── AppDbContext.cs           # EF Core Database Context
+│   └── AppDbContext.cs           # EF Core SQL Server Database Context
 ├── DTOs/
 │   ├── AuthDtos.cs               # RegisterDto, LoginDto, AuthResponseDto
 │   └── ProductDtos.cs            # CreateProductDto, UpdateProductDto, ProductResponseDto
 ├── Models/
-│   ├── User.cs                   # In-memory User Model
+│   ├── User.cs                   # In-Memory User Model
 │   └── Product.cs                # Product Database Entity
 ├── Repositories/
 │   ├── IUserRepository.cs        # User Repository Interface
-│   ├── InMemoryUserRepository.cs # In-Memory BCrypt User Store
+│   ├── InMemoryUserRepository.cs # In-Memory BCrypt User Storage
 │   ├── IProductRepository.cs     # Product Repository Interface
-│   └── ProductRepository.cs       # EF Core Database Implementation
+│   └── ProductRepository.cs       # EF Core Database Repository
 ├── Services/
 │   ├── IJwtTokenService.cs       # Token Service Interface
-│   └── JwtTokenService.cs        # Local JWT Generator
+│   └── JwtTokenService.cs        # Local JWT Generator Service
 ├── wwwroot/                      # Single Page Application Assets
-│   ├── index.html                # Main SPA Layout
-│   ├── style.css                 # Custom Design System & CSS
-│   ├── api.js                    # API & Okta SDK Service Module
-│   └── app.js                    # DOM Controller & Event Handlers
-├── appsettings.json              # JWT & Okta Settings
-├── Program.cs                    # Dependency Injection & Dual Auth Middleware Pipeline
-└── README.md                     # Documentation
+│   ├── index.html                # Main SPA Layout & Auth Views
+│   ├── style.css                 # Custom CSS Design System
+│   ├── api.js                    # API & Okta SDK Integration Module
+│   └── app.js                    # DOM Logic & Event Listeners
+├── appsettings.json              # JWT & Okta Configuration Settings
+├── Program.cs                    # Dependency Injection & Dual Auth Pipeline
+└── README.md                     # Comprehensive Project Documentation
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Getting Started & Local Setup
 
 ### Prerequisites
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
@@ -91,7 +118,7 @@ cd Okta-DotNet8-ProductManagement
 ```
 
 ### 2. Configure `appsettings.json`
-Verify connection strings and Okta settings in `appsettings.json`:
+Ensure `appsettings.json` has valid database and authentication settings:
 ```json
 {
   "ConnectionStrings": {
@@ -118,21 +145,21 @@ dotnet build
 dotnet run --urls "http://localhost:5242"
 ```
 
-### 4. Access the Application
-- **Frontend SPA**: `http://localhost:5242/index.html`
-- **Swagger Docs**: `http://localhost:5242/swagger`
+### 4. Open in Browser
+- 🌐 **Single Page Application (UI)**: **`http://localhost:5242/index.html`**
+- 📄 **Swagger Interactive API**: **`http://localhost:5242/swagger`**
 
 ---
 
-## ⚙️ Okta Setup Checklist
+## ⚙️ Okta Admin Console Configuration
 
-To connect your own Okta tenant:
+To connect your own Okta Tenant:
 1. Create a **Single-Page Application (SPA)** in Okta Admin Console.
 2. Set **Client Authentication** to **`None (Use PKCE)`**.
-3. Add `http://localhost:5242/index.html` and `http://localhost:5242/` to **Sign-in / Sign-out redirect URIs**.
-4. Add `http://localhost:5242` under **Security** $\rightarrow$ **API** $\rightarrow$ **Trusted Origins** with **CORS** and **Redirect** checked.
+3. Set **Sign-in / Sign-out redirect URIs** to `http://localhost:5242/index.html` and `http://localhost:5242/`.
+4. Under **Security** $\rightarrow$ **API** $\rightarrow$ **Trusted Origins**, add `http://localhost:5242` with **CORS** and **Redirect** checked.
 
 ---
 
 ## 📝 License
-This project is open-source under the [MIT License](LICENSE).
+This project is open-source and available under the [MIT License](LICENSE).
